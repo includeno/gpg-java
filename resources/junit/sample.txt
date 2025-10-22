@@ -1,0 +1,1 @@
+This is a sample plaintext used to demonstrate GPG encryption and decryption.

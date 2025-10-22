@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+  gpg-service:
+    build: .
+    ports:
+      - "${HOST_PORT:-8080}:8080"
+    environment:
+      JAVA_OPTS: "${JAVA_OPTS:-}"
+      LINUX_RMEM_MAX: "${LINUX_RMEM_MAX:-8388608}"
+      LINUX_WMEM_MAX: "${LINUX_WMEM_MAX:-8388608}"
+    sysctls:
+      net.core.rmem_max: "${LINUX_RMEM_MAX:-8388608}"
+      net.core.wmem_max: "${LINUX_WMEM_MAX:-8388608}"
+    volumes:
+      - gpg-data:/app/.gnupg
+      - ./resources:/workspace/resources:ro
+    command: []
+
+volumes:
+  gpg-data:
