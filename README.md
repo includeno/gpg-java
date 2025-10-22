@@ -108,6 +108,17 @@ emits no binary artifacts, fulfilling the initialization-only requirement.
 docker build -t gpg-svc .
 ```
 
+> **Tip:** The runtime stage defaults to `openjdk:8-jre-slim`, but you can reuse
+> an existing Java 8 base image such as `jdk8-fitnesse:latest` (which uses the
+> `apk` package manager) by passing a build argument:
+>
+> ```bash
+> docker build --build-arg RUNTIME_BASE=jdk8-fitnesse:latest -t gpg-svc .
+> ```
+>
+> The Dockerfile automatically installs `gnupg`, `bash`, and `procps` using the
+> detected package manager (`apk`, `apt-get`, or another compatible tool).
+
 ### Run with custom buffer sizes
 
 ```bash
@@ -126,6 +137,10 @@ exposes the same tuning knobs:
 ```bash
 docker compose up --build
 ```
+
+To switch the runtime base image when using Compose, supply the `RUNTIME_BASE`
+environment variable at invocation time (for example,
+`RUNTIME_BASE=jdk8-fitnesse:latest docker compose up --build`).
 
 ### Initialize Keys inside the Container
 
