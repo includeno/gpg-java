@@ -135,6 +135,49 @@ docker exec -it gpg-svc-1 initialize-gpg.sh \
   GPG_SECRET_KEY_PATH=/workspace/resources/junit/seckey.asc
 ```
 
+### Providing Custom Key Files to the Container
+
+If you have public/secret key material outside of the repository, mount it into
+the container and point the initialization script at the mounted paths. The
+paths you supply to `initialize-gpg.sh` must reference files that are visible
+inside the container.
+
+#### `docker run`
+
+```bash
+docker run --rm -p 8080:8080 \
+  -v /absolute/path/to/keys:/workspace/external-keys:ro \
+  gpg-svc
+
+docker exec -it <container-id> initialize-gpg.sh \
+  GPG_PUBLIC_KEY_PATH=/workspace/external-keys/your-public.asc \
+  GPG_SECRET_KEY_PATH=/workspace/external-keys/your-secret.asc
+```
+
+#### `docker compose`
+
+Add a bind mount to the `gpg-service` service (or set `HOST_KEYS_DIR` to an
+existing directory before invoking Compose) and run the initializer with the
+container-visible paths:
+
+```yaml
+services:
+  gpg-service:
+    volumes:
+      - ${HOST_KEYS_DIR:-/absolute/path/to/keys}:/workspace/external-keys:ro
+```
+
+```bash
+HOST_KEYS_DIR=/absolute/path/to/keys docker compose up --build -d
+docker exec -it gpg-java-gpg-service-1 initialize-gpg.sh \
+  GPG_PUBLIC_KEY_PATH=/workspace/external-keys/your-public.asc \
+  GPG_SECRET_KEY_PATH=/workspace/external-keys/your-secret.asc
+```
+
+When you later invoke the HTTP decrypt endpoint, reuse the same container paths
+for the `publicKeyring`/`secretKeyring` parameters or inline the key material
+via `publicKeyData`/`secretKeyData`.
+
 ## Testing the Endpoint via Docker
 
 After running the container and preparing the keys, trigger a decryption:
