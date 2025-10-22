@@ -7,6 +7,11 @@ adjust_buffer() {
   if [[ -z "$value" ]]; then
     return
   fi
+  local sys_path="/proc/sys/${key//./\/}"
+  if [[ ! -e "$sys_path" ]]; then
+    echo "[entrypoint] Warning: $sys_path not found; skipping $key adjustment." >&2
+    return
+  fi
   echo "[entrypoint] Setting $key to $value"
   if ! sysctl -w "$key=$value"; then
     echo "[entrypoint] Warning: unable to set $key. This may require elevated privileges." >&2
