@@ -12,6 +12,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.release>17</maven.compiler.release>
   </properties>
 
   <dependencies>
@@ -38,19 +39,32 @@
 	</dependency>
   </dependencies>
   <build>
-	  <testResources>
-	      <testResource>
-	        <directory>${project.basedir}/resources/junit</directory>
-	      </testResource>
-	  </testResources>
+      <resources>
+          <resource>
+              <directory>${project.basedir}/resources/junit</directory>
+              <targetPath>junit</targetPath>
+          </resource>
+      </resources>
+      <testResources>
+          <testResource>
+            <directory>${project.basedir}/resources/junit</directory>
+            <targetPath>junit</targetPath>
+          </testResource>
+      </testResources>
       <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-eclipse-plugin</artifactId>
+                <version>2.10</version>
                 <configuration>
                     <downloadSources>true</downloadSources>
                     <downloadJavadocs>true</downloadJavadocs>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
             </plugin>
       </plugins>
   </build>

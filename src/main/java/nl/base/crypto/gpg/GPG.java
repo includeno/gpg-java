@@ -378,9 +378,11 @@ public class GPG {
 	public InputStream sign(File input, String hexFingerPrint, String passphrase) throws IOException {
 		//return runGPG("--passphrase", passphrase, "--sign", input.getAbsolutePath());
 		return runGPG("--fingerprint",
-				hexFingerPrint,
-				"--passphrase",
-				passphrase,
+                                hexFingerPrint,
+                                "--pinentry-mode",
+                                "loopback",
+                                "--passphrase",
+                                passphrase,
 				"--output",
 				"-",
 				"--clearsign",
@@ -398,7 +400,7 @@ public class GPG {
 	 */
 	public InputStream sign(byte[] input, String hexFingerPrint, String passphrase) throws IOException {
 		//return runGPG("--passphrase", passphrase, "--sign", input.getAbsolutePath());
-		return runGPG(Arrays.asList("--passphrase", passphrase, "--output", "-", "--clearsign"), input).getStdOut();
+                return runGPG(Arrays.asList("--pinentry-mode", "loopback", "--passphrase", passphrase, "--output", "-", "--clearsign"), input).getStdOut();
 	}
 
 	/**
@@ -412,13 +414,15 @@ public class GPG {
 	 */
 	public InputStream sign(InputStream input, String hexFingerPrint, String passphrase) throws IOException {
 		//return runGPG("--passphrase", passphrase, "--sign", input.getAbsolutePath());
-		return runGPG(Arrays.asList("--fingerprint",
-				hexFingerPrint,
-				"--passphrase",
-				passphrase,
-				"--output",
-				"-",
-				"--clearsign"), input).getStdOut();
+                return runGPG(Arrays.asList("--fingerprint",
+                                hexFingerPrint,
+                                "--pinentry-mode",
+                                "loopback",
+                                "--passphrase",
+                                passphrase,
+                                "--output",
+                                "-",
+                                "--clearsign"), input).getStdOut();
 	}
 
 	/**
@@ -562,7 +566,7 @@ public class GPG {
 	 * @throws IOException
 	 */
 	public InputStream decrypt(File input, String passphrase) throws IOException {
-		return runGPG("--passphrase", passphrase, "-d", input.getAbsolutePath()).getStdOut();
+		return runGPG("--pinentry-mode", "loopback", "--passphrase", passphrase, "--decrypt", input.getAbsolutePath()).getStdOut();
 	}
 
 	/**
@@ -576,7 +580,7 @@ public class GPG {
 	public void decrypt(File input, File output, String passphrase) throws IOException {
 		String outputPath = output.getAbsolutePath();
 		String inputPath = input.getAbsolutePath();
-		runGPG("--passphrase", passphrase,	"--output",	outputPath, inputPath);
+		runGPG("--pinentry-mode", "loopback", "--passphrase", passphrase, "--decrypt", "--output", outputPath, inputPath);
 	}
 
 	/**
@@ -587,7 +591,7 @@ public class GPG {
 	 * @throws IOException
 	 */
 	public InputStream decrypt(InputStream cipherText, String passphrase) throws IOException {
-		return runGPG(Arrays.asList("--passphrase", passphrase), cipherText).getStdOut();
+		return runGPG(Arrays.asList("--pinentry-mode", "loopback", "--passphrase", passphrase, "--decrypt"), cipherText).getStdOut();
 	}
 
 	public static class GPGException extends RuntimeException {
