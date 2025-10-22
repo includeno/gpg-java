@@ -23,13 +23,13 @@ public class GpgDecryptionService {
         applyTrustModel(defaultGpg, properties.getTrustModel());
     }
 
-    public byte[] decryptFile(String filePath, String passphrase, String publicKeyring, String secretKeyring)
-            throws IOException {
+    public byte[] decryptFile(String filePath, String passphrase, String publicKeyring, String secretKeyring,
+            String publicKeyData, String secretKeyData) throws IOException {
         File cipherFile = new File(filePath);
         if (!cipherFile.exists() || !cipherFile.isFile()) {
             throw new FileNotFoundException("Encrypted file not found: " + filePath);
         }
-        GPG gpg = resolveGpg(publicKeyring, secretKeyring);
+        GPG gpg = resolveGpg(publicKeyring, secretKeyring, publicKeyData, secretKeyData);
         applyTrustModel(gpg, properties.getTrustModel());
         try (InputStream decrypted = gpg.decrypt(cipherFile, passphrase)) {
             return IOUtils.toByteArray(decrypted);
@@ -40,12 +40,28 @@ public class GpgDecryptionService {
         return Base64.getEncoder().encodeToString(data);
     }
 
-    private GPG resolveGpg(String publicKeyring, String secretKeyring) throws IOException {
+    private GPG resolveGpg(String publicKeyring, String secretKeyring, String publicKeyData, String secretKeyData)
+            throws IOException {
+        boolean hasData = StringUtils.isNotBlank(publicKeyData) || StringUtils.isNotBlank(secretKeyData);
+        if (hasData) {
+            if (StringUtils.isBlank(publicKeyData) || StringUtils.isBlank(secretKeyData)) {
+                throw new IllegalArgumentException(
+                        "Both publicKeyData and secretKeyData must be provided when supplying inline key material.");
+            }
+            if (StringUtils.isNotBlank(publicKeyring) || StringUtils.isNotBlank(secretKeyring)) {
+                throw new IllegalArgumentException(
+                        "Do not mix keyring paths with inline key data. Provide either paths or data for both keys.");
+            }
+            File pub = materializeKey("public", publicKeyData);
+            File sec = materializeKey("secret", secretKeyData);
+            return new GPG(pub, sec);
+        }
         if (StringUtils.isBlank(publicKeyring) && StringUtils.isBlank(secretKeyring)) {
             return defaultGpg;
         }
         if (StringUtils.isBlank(publicKeyring) || StringUtils.isBlank(secretKeyring)) {
-            throw new IllegalArgumentException("Both public and secret keyring paths must be provided when overriding the default keyrings.");
+            throw new IllegalArgumentException(
+                    "Both public and secret keyring paths must be provided when overriding the default keyrings.");
         }
         File pub = new File(publicKeyring);
         if (!pub.exists() || !pub.isFile()) {
@@ -56,6 +72,27 @@ public class GpgDecryptionService {
             throw new FileNotFoundException("Secret keyring not found: " + secretKeyring);
         }
         return new GPG(pub, sec);
+    }
+
+    private File materializeKey(String prefix, String keyData) throws IOException {
+        byte[] decoded = decodeKeyMaterial(keyData);
+        File temp = File.createTempFile("gpg-" + prefix + "-", ".asc");
+        temp.deleteOnExit();
+        java.nio.file.Files.write(temp.toPath(), decoded);
+        return temp;
+    }
+
+    private byte[] decodeKeyMaterial(String keyData) {
+        String trimmed = keyData == null ? "" : keyData.trim();
+        if (trimmed.startsWith("-----BEGIN")) {
+            return trimmed.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        }
+        try {
+            return Base64.getDecoder().decode(trimmed);
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException(
+                    "Key data must be ASCII-armored text or Base64 encoded string including the armored headers.", ex);
+        }
     }
 
     private GPG createDefaultGpg() throws IOException {

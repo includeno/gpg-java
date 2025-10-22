@@ -25,8 +25,11 @@ public class GpgController {
             @RequestParam("passphrase") String passphrase,
             @RequestParam(value = "publicKeyring", required = false) String publicKeyring,
             @RequestParam(value = "secretKeyring", required = false) String secretKeyring,
+            @RequestParam(value = "publicKeyData", required = false) String publicKeyData,
+            @RequestParam(value = "secretKeyData", required = false) String secretKeyData,
             @RequestParam(value = "encoding", defaultValue = "base64") String encoding) throws IOException {
-        byte[] decrypted = gpgDecryptionService.decryptFile(filePath, passphrase, publicKeyring, secretKeyring);
+        byte[] decrypted = gpgDecryptionService.decryptFile(filePath, passphrase, publicKeyring, secretKeyring,
+                publicKeyData, secretKeyData);
         if ("plain".equalsIgnoreCase(encoding)) {
             return new DecryptionResponse(filePath, "plain", new String(decrypted, StandardCharsets.UTF_8));
         }

@@ -64,6 +64,10 @@ Query parameters:
 - `passphrase` (required): Passphrase for the secret key.
 - `publicKeyring`, `secretKeyring` (optional): Override keyring files for the
   request. Both must be provided together.
+- `publicKeyData`, `secretKeyData` (optional): Inline key material supplied as
+  Base64-encoded blobs or raw ASCII-armored blocks. Provide both parameters at
+  the same time and omit the `publicKeyring`/`secretKeyring` overrides when
+  using inline keys.
 - `encoding` (optional): `base64` (default) or `plain`.
 
 ### Example Response
